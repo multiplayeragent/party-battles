@@ -1,0 +1,21 @@
+{
+  "name": "Party Battles",
+  "genre": "rpg",
+  "dim": "2D",
+  "mode": "Co-op",
+  "players": "1–4",
+  "hook": "Pick your hero's move. Beat the waves, then the boss.",
+  "how": "Your party of four (a knight, a mage, a cleric and a rogue) fights wave after wave of monsters. Every turn each player picks their hero's move: attack, a class skill, a potion or defend. Every fifth wave is a boss; see how far the party gets.",
+  "controls": "Click or tap an action, then a target; keys 1 to 4 pick an action",
+  "uses": [
+    ["Leaderboard", "The most waves each player's party cleared."],
+    ["Host-run rules", "The host's browser resolves every turn and plays the monsters; if it leaves, the next player takes over the same turn."],
+    ["Bots", "Bots play any hero nobody has picked, and take over for anyone who leaves."],
+    ["Live sync", "Everyone sees each other's picks and the same turn play out."]
+  ],
+  "ideas": [
+    "Add a fifth hero, a bard who buffs the party",
+    "Let players spend gold on new skills between waves",
+    "Make the boss a giant robot with a laser attack"
+  ]
+}

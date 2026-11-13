@@ -32,6 +32,7 @@
   .card h2 { margin: 0; font-size: 25px; color: #ffd166; } .card h3 { margin: 14px 0 4px; font-size: 13px; color: #b9a6ff; text-align: left; }
   .card p { margin: 6px 0; font-size: 14px; opacity: .85; }
   .card ol { margin: 0; padding-left: 24px; font-size: 14px; text-align: left; } .card li span { float: right; font-variant-numeric: tabular-nums; }
+  .card li.note { list-style: none; margin-left: -24px; opacity: .8; } /* a message, not a ranked line */
   button.go { width: 100%; min-height: 48px; margin-top: 14px; border: 0; border-radius: 12px; background: #ffd166; color: #2a1a00; font: 800 17px system-ui, sans-serif; cursor: pointer; }
   @media (max-width: 640px) { #acts { grid-template-columns: 1fr 1fr; } #msg { font-size: 28px; } }
 </style>
@@ -49,7 +50,7 @@
 <div class="hud" id="net">Connecting…</div>
 <div id="over" hidden><div class="card">
   <h2 id="overTitle"></h2><p id="overSub"></p>
-  <h3>Most waves cleared</h3><ol id="board"><li>Loading…</li></ol>
+  <h3>Most waves cleared</h3><ol id="board"><li class="note">Loading…</li></ol>
   <button class="go" id="again">Play again</button><p id="overNext"></p>
 </div></div>
 <script>
@@ -400,7 +401,13 @@ function playMove(b, ev, quiet) {
   if (kind === "breath") { shake = 12; banner("Flame breath!", ""); }
   sfx({ atk: "hit", stab: "hit", fire: "fire", heal: "heal", potion: "heal", raise: "heal", breath: "roar", taunt: "guard", def: "guard" }[kind] || "hit");
 }
-function pop(x, y, text, color, big) { pops.push({ x, y, text, color, big, t: performance.now() }); }
+/** A number or word rising from (x, y): kept below the wave title, and stacked under one still rising from the same spot. */
+function pop(x, y, text, color, big) {
+  const now = performance.now();
+  y = Math.max(ATTRACT ? 50 : 135, y);
+  while (pops.some((p) => Math.abs(p.x - x) < 50 && Math.abs(p.y - y) < 26 && now - p.t < 500)) y += 28;
+  pops.push({ x, y, text, color, big, t: now });
+}
 function burst(x, y, color, n, speed) { for (let i = 0; i < n && bits.length < 400; i++) { const a = Math.random() * 6.28, s = speed * (0.4 + Math.random()); bits.push({ x, y, vx: Math.cos(a) * s * 60, vy: Math.sin(a) * s * 60 - 80, life: 0, max: 0.4 + Math.random() * 0.4, color }); } }
 let msgUntil = 0;
 function banner(title, sub) { document.getElementById("msg").innerHTML = `${esc(title)}${sub ? `<small>${esc(sub)}</small>` : ""}`; msgUntil = performance.now() + 1800; }
@@ -572,6 +579,7 @@ addEventListener("keydown", (e) => {
   else if (n <= 4) chooseAction(["atk", "skill", "item", "def"][n - 1]);
 });
 for (const ev of ["pointerdown", "keydown"]) addEventListener(ev, () => { try { audio ||= new AudioContext(); } catch {} }, { once: true });
+cv.addEventListener("contextmenu", (e) => e.preventDefault());
 document.addEventListener("touchmove", (e) => e.preventDefault(), { passive: false });
 $("again").onclick = () => { if (isHost()) host.again = true; else net.send("again", {}); };
 /** The top line, the panel (who you play, the four moves, what to do next) and the results card. */
@@ -613,11 +621,11 @@ function hud(b) {
 }
 function showBoard(cleared, played) {
   const list = $("board");
-  if (!board) { list.innerHTML = "<li>Leaderboards need a connection.</li>"; return; }
-  list.innerHTML = "<li>Loading…</li>";
+  if (!board) { list.innerHTML = "<li class=\"note\">Leaderboards need a connection.</li>"; return; }
+  list.innerHTML = "<li class=\"note\">Loading…</li>";
   (played && cleared > 0 ? board.submit(cleared).catch(() => null) : Promise.resolve()).then(() => board.top(10)).then(({ entries }) => {
-    list.innerHTML = entries.length ? entries.map((e) => `<li>${esc(e.username || "Player")}<span>${e.score} waves</span></li>`).join("") : "<li>No runs yet. Set the first.</li>";
-  }).catch(() => { list.innerHTML = "<li>Couldn't load the leaderboard.</li>"; });
+    list.innerHTML = entries.length ? entries.map((e) => `<li>${esc(e.username || "Player")}<span>${e.score} waves</span></li>`).join("") : "<li class=\"note\">No runs yet. Set the first.</li>";
+  }).catch(() => { list.innerHTML = "<li class=\"note\">Couldn't load the leaderboard.</li>"; });
 }
 
 // ── MAIN LOOP ───────────────────────────────────────────────────────────────────────
